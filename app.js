@@ -25,22 +25,20 @@ const data = {
 function sendNotification(message){
     return new Promise((resolve, reject) => {
         const Headers = {
-            "Content-Type": "application-json",
+            "Content-Type": "application/json",
             "Authorization": "key="+process.env.FCM_API_KEY
         };
     
-        const URL = "https://fcm.googleapis.com/v1/projects/pushnotification-f3008/messages:send";
+        // const URL = "https://fcm.googleapis.com/v1/projects/pushnotification-f3008/messages:send";
+
+        const URL = "https://fcm.googleapis.com/fcm/send";
 
         request.post({
             headers: Headers,
             url: URL,
             body: JSON.stringify(message)
         }, function (error, response, body) {
-            if(error){
-                return reject(error);
-            }else{
-                return resolve(body);
-            }
+            resolve(body);
         });
     });
 }
@@ -48,36 +46,28 @@ function sendNotification(message){
 router.post("/pushNotification", (req, res) => {
     const token = req.body.token;
     const type = req.body.type;
-    const message;
+    let message;
 
     if(type === 'notification'){
         message = {
-            "message": {
-                "token": token,
-                "notification": notification
-            }
+            "to": token,
+            "notification": notification
         };
     } else if(type === 'data'){
         message = {
-            "message": {
-                "token": token,
-                "data": data
-            }
+            "to": token,
+            "data": data
         };
     } else{
         message = {
-            "message": {
-                "token": token,
-                "notification": notification,
-                "data": data
-            }
+            "to": token,
+            "notification": notification,
+            "data": data
         };   
     }
-    sendNotification.then(
+    sendNotification(message).then(
         success => {
-            return res.json({"Error": false, "Response": JSON.stringify(success)});
-        }, error => {
-            return res.json({"Error": true, "Response": "Something Went Wrong"});
+            return res.json({"Error": false, "Response": success});
         }
     )
     
